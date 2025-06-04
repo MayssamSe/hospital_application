@@ -214,3 +214,7 @@ Si l’utilisateur tente une action interdite (comme supprimer un patient), un m
 
 Cette application illustre l’utilisation de Spring Boot et Spring Security pour développer une application hospitalière complète avec gestion des patients et des utilisateurs, sécurisée et conviviale.
 
+## Auteur
+
+- **Nom** : *Sehait Mayssam*
+- **GitHub** : [github.com/MayssamSe/hospital-management-spring](https://github.com/MayssamSe/hospital_application)
