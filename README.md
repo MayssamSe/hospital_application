@@ -118,13 +118,23 @@ CommandLineRunner start(PatientRepository patientRepository, UserService userSer
 
 ---
 
-
 ## Fonctionnement général
 
 Lancement de l’application : la base est remplie avec des patients et utilisateurs.  
 Authentification : `/login` pour se connecter.  
 Autorisation : certains endpoints protégés par rôles.  
 Interface utilisateur : formulaires pour créer, éditer et supprimer des patients.
+
+## Prérequis
+
+Pour faire fonctionner cette application, vous devez :
+
+- Installer [XAMPP](https://www.apachefriends.org/index.html) ou un autre serveur local.
+- Démarrer les services **Apache** et **MySQL** via le panneau de contrôle XAMPP.
+- Vérifier que MySQL est accessible et correspond aux paramètres de connexion configurés dans `application.properties`.
+- (Optionnel) Utiliser phpMyAdmin ou un autre outil pour visualiser la base de données et vérifier les tables créées.
+
+> Note : L’application utilise MySQL pour stocker les données des patients et des utilisateurs.
 
 ## Tests et captures d'écran
 
@@ -217,4 +227,4 @@ Cette application illustre l’utilisation de Spring Boot et Spring Security pou
 ## Auteur
 
 - **Nom** : *Sehait Mayssam*
-- **GitHub** : [github.com/MayssamSe/hospital-management-spring](https://github.com/MayssamSe/hospital_application)
+- **GitHub** : [github.com/MayssamSe/hospital_application](https://github.com/MayssamSe/hospital_application)
