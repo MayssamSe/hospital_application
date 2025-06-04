@@ -21,38 +21,102 @@ L’application repose sur un ensemble de technologies modernes et bien intégr�
 
 Grâce à cette architecture, l’application offre une base solide pour étendre ses fonctionnalités et évoluer facilement.
 
-## Description du code
+## Description du Code
 
-### Entité Patient
+### 1. Entité `Patient`
 
-- Classe Java annotée avec `@Entity`.
-- Champs principaux : `id`, `nom`, `dateNaissance`, `malade`, `score`.
-- Validation :
-  - `@NotEmpty`, `@Size`, `@DecimalMin`.
+```java
+@Entity
+@Data // Lombok pour générer automatiquement getters/setters
+@NoArgsConstructor
+@AllArgsConstructor
+public class Patient {
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-### Repository PatientRepository
+    @NotEmpty(message = "Le nom ne peut pas être vide")
+    @Size(min = 3, max = 20, message = "Le nom doit avoir entre 3 et 20 caractères")
+    private String nom;
 
-- Interface JPA pour manipuler les patients.
-- Méthodes de recherche avec pagination et requêtes personnalisées.
+    @Temporal(TemporalType.DATE)
+    private Date dateNaissance;
 
-### Sécurité
+    private boolean malade;
 
-- Classe `SecurityConfig` : configure l’authentification, les filtres et les autorisations.
-  - Page de login personnalisée (`/login`).
-  - Page `/notAuthorized` pour les accès interdits.
-  - `/deletePatient/**` réservé aux admins.
+    @DecimalMin("0")
+    private int score;
+}
+```
 
-### Gestion des utilisateurs
+**Explication** :  
+- `@Entity` indique que cette classe est une entité persistante.
+- Lombok (`@Data`, `@NoArgsConstructor`, `@AllArgsConstructor`) réduit le code répétitif.
+- Les annotations de validation (`@NotEmpty`, `@Size`, `@DecimalMin`) assurent la qualité des données avant enregistrement en base de données.
 
-- Entités :
-  - `AppUser` : utilisateur avec username et rôles.
-  - `AppRole` : rôle avec un nom.
-- Repositories : CRUD pour gérer les utilisateurs et rôles.
+---
 
-### Initialisation de l’application
+### 2. Repository `PatientRepository`
 
-- Classe `HospitalApplication` avec `CommandLineRunner` pour injecter des patients au démarrage.
-- `PasswordEncoder` pour sécuriser les mots de passe.
+```java
+public interface PatientRepository extends JpaRepository<Patient, Long> {
+    Page<Patient> findByNomContains(String keyword, Pageable pageable);
+}
+```
+
+**Explication** :  
+- `JpaRepository` fournit des méthodes CRUD automatiques.
+- `findByNomContains` est une méthode dérivée qui recherche les patients contenant le mot-clé dans leur nom (utile pour la recherche avec pagination).
+
+---
+
+### 3. Sécurité : `SecurityConfig`
+
+```java
+@Configuration
+@EnableWebSecurity
+public class SecurityConfig extends WebSecurityConfigurerAdapter {
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+        http.formLogin().loginPage("/login").permitAll();
+        http.authorizeRequests()
+            .antMatchers("/deletePatient/**").hasRole("ADMIN")
+            .antMatchers("/editPatient/**", "/savePatient/**", "/formPatient/**").hasRole("ADMIN")
+            .anyRequest().authenticated();
+        http.exceptionHandling().accessDeniedPage("/notAuthorized");
+    }
+}
+```
+
+**Explication** :  
+- `@EnableWebSecurity` active la sécurité Spring.
+- `.formLogin().loginPage("/login")` définit une page de connexion personnalisée.
+- `.antMatchers(...).hasRole("ADMIN")` restreint certaines URL aux administrateurs.
+- `.accessDeniedPage("/notAuthorized")` affiche une page d’avertissement en cas d’accès refusé.
+
+---
+
+### 4. Initialisation avec `CommandLineRunner`
+
+```java
+@Bean
+CommandLineRunner start(PatientRepository patientRepository, UserService userService) {
+    return args -> {
+        Stream.of("Alice", "Bob", "Charlie").forEach(name -> {
+            patientRepository.save(new Patient(null, name, new Date(), false, 120));
+        });
+        userService.saveUser("admin", "1234", "1234");
+        userService.saveUser("user2", "1234", "1234");
+        userService.addRoleToUser("admin", "ADMIN");
+        userService.addRoleToUser("user2", "USER");
+    };
+}
+```
+
+**Explication** :  
+- `CommandLineRunner` exécute ce code au démarrage de l’application.
+- Il crée des patients fictifs et configure deux utilisateurs (`admin` et `user2`) avec des rôles différents pour les tests.
+
+---
 
 
 ## Fonctionnement général
@@ -70,7 +134,7 @@ localhost:8088/login
 ## Connexion Administrateur
 
 Connectez-vous avec le nom d’utilisateur **admin** et le mot de passe **1234**.  
-![Login](images/adminLogin.PNG)
+![Login](images/adminLog.PNG)
 
 ## Accueil Administrateur
 
@@ -144,7 +208,7 @@ Après authentification, la page d’accueil affiche la liste des patients, mais
 ![Chercher](images/userChercher.PNG)
 
 Si l’utilisateur tente une action interdite (comme supprimer un patient), un message d’avertissement s’affiche.  
-![notAuthorized](images/notAthorized.PNG)
+![notAuthorized](images/notAuthorized.PNG)
 
 ## Conclusion
 
